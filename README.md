@@ -25,5 +25,19 @@ Included are simple python scripts to publish a test message and to consume mess
 ```bash
 
 prompt> export RABBITMQ_PASSWORD=xxxxx
-prompt> ./rabbitpuplish.py
+prompt> ./rabbitpublish.py
+Startup
+<BlockingConnection impl=<SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x106b13e20> params=<ConnectionParameters host=rabbitprod-integration.ociblue.agregory.page port=5672 virtual_host=/ ssl=False>>>
+Connected to RabbitMQ Channel <BlockingChannel impl=<Channel number=1 OPEN conn=<SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x106b13e20> params=<ConnectionParameters host=rabbitprod-integration.ociblue.agregory.page port=5672 virtual_host=/ ssl=False>>>>
+ [x] Sent {"text":"rabbit message"}
+
+prompt> ./rabbitconsume.py
+Startup
+<BlockingConnection impl=<SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x107c48850> params=<ConnectionParameters host=rabbitprod-integration.ociblue.agregory.page port=5672 virtual_host=/ ssl=False>>>
+Connected to RabbitMQ Channel <BlockingChannel impl=<Channel number=1 OPEN conn=<SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x107c48850> params=<ConnectionParameters host=rabbitprod-integration.ociblue.agregory.page port=5672 virtual_host=/ ssl=False>>>>
+<Basic.GetOk(['delivery_tag=1', 'exchange=', 'message_count=0', 'redelivered=False', 'routing_key=hello'])> <BasicProperties(['content_type=application/json', 'message_id=1de0d00f-942f-45b5-a026-c9e20771a155'])> b'{"text":"rabbit message"}'
+b'{"text":"rabbit message"}'
+No message returned
+Done Reading {'1de0d00f-942f-45b5-a026-c9e20771a155': b'{"text":"rabbit message"}', 'codes': '{"ret":"retv"}'} message
+
 ```
