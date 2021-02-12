@@ -110,7 +110,7 @@ prompt> echo '{"messages":3}'|fn invoke rabbit-bridge oci-rabbit-bridge
 ````
 ### Add API Gateway 
 Once the function is running, add the API Gateway or use an existing deployment.  This must also be configured per docs to allow access to Oracle Functions.  Once completed, add a deployment and then route as follows:
-![API GW Route](images/API-GW-Route.png
+![API GW Route](images/API-GW-Route.png)
 
 The GW can be accessed via CURL before configuring for AuthN/AuthZ (out of scope). Following are exampels with and without messages.
 ```bash
