@@ -16,4 +16,4 @@ The basic process is to install the function into a function app, then connect i
 
 ## Overall Architecture
 
-![Architecture](OCI-Rabbit.svg)
+![Architecture](images/OCI-Rabbit.svg)
