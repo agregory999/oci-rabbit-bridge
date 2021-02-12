@@ -2,6 +2,7 @@
 
 import pika
 import json
+import os
 
 def connect_rabbitmq(hostname,port,username,password,exchange,qname):
 
@@ -19,7 +20,7 @@ def connect_rabbitmq(hostname,port,username,password,exchange,qname):
 cfg_RABBITMQ_HOST = "rabbitprod-integration.ociblue.agregory.page"
 cfg_RABBITMQ_PORT = 5672
 cfg_RABBITMQ_USERNAME = "kbk8j7E0QllYJqwFzU46oGNwPrOIstUE"
-cfg_RABBITMQ_PASSWORD = "kcrzRW7bwf-33OIMATflbGv7iFXDpv6R"
+cfg_RABBITMQ_PASSWORD = os.environ['RABBITMQ_PASSWORD']
 cfg_RABBITMQ_EXCH = "/"
 cfg_RABBITMQ_QNAME =  "hello"
 cfg_MESSAGES_TO_READ = 10

@@ -17,3 +17,13 @@ The basic process is to install the function into a function app, then connect i
 ## Overall Architecture
 
 ![Architecture](images/OCI-Rabbit.svg)
+
+## Utilities
+
+Included are simple python scripts to publish a test message and to consume messages from Rabbit MQ.  To use them, export the password and edit the parameters in the script:
+
+```bash
+
+prompt> export RABBITMQ_PASSWORD=xxxxx
+prompt> ./rabbitpuplish.py
+```
