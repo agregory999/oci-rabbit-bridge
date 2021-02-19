@@ -36,21 +36,25 @@ total = 0
 resp = "ff"
 
 # Consume a message (loop)
-jsonresp = json.loads('{}')
-message_bodies = []
+jsonresp = json.loads("{}")
+
+messages = []
+
 for i in range(cfg_MESSAGES_TO_READ):
     method_frame, header_frame, body = channel.basic_get(cfg_RABBITMQ_QNAME)
     if method_frame:
-        print(method_frame, header_frame, body)
-        jsonresp[header_frame.message_id]=body
-        print (str(body))
+        data = json.loads(body)
+        messages.append(data)
+        #print(header_frame.message_id)
+        #jsonresp[header_frame.message_id]=data
+        #print (data)
         channel.basic_ack(method_frame.delivery_tag)
         total+=1
     else:
         print('No message returned')
         break
 
-jsonresp['codes'] = '{"ret":"retv"}'
+jsonresp["messages"] = messages
 # message_string = ""
 # for message in message_bodies:
 #     message_string += str(message)
@@ -61,4 +65,5 @@ jsonresp['codes'] = '{"ret":"retv"}'
 #         message_string += ","
 
 # jsonresponse = message_string    
-print("Done Reading {} message".format(jsonresp))
+print(json.dumps(jsonresp))
+#print(json.dumps('{"error"}'))

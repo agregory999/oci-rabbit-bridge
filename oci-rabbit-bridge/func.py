@@ -17,7 +17,7 @@ def handler(ctx, data: io.BytesIO = None):
         resp = "0-Begin" 
     
         # Construct JSON Response - add to it later
-        jsonresponse = json.loads('{}')
+        jsonresponse = json.loads("{}")
         jsonrequest = json.loads(data.getvalue())
 
         try:
@@ -39,20 +39,15 @@ def handler(ctx, data: io.BytesIO = None):
                 headers={"Content-Type": "application/json"}
             )
 
-        # Construct JSON Response - add to it later
-        jsonresponse = json.loads('{}')
-        jsonrequest = json.loads(data.getvalue())
-
         # Get Password
         try:
             password = get_text_secret(cfg_RABBITMQ_PASSWORD_OCID)
-            print("Password: {}".format(password))
         except Exception as ex:
             resp += "|0-Incorrect Config - Password not avail"
             jsonresponse["ReturnCodes"] = resp
             return response.Response(
                 ctx,
-                response_data=jsonresponse,
+                response_data=json.dumps(jsonresponse),
                 headers={"Content-Type": "application/json"}
             )
 
@@ -66,23 +61,22 @@ def handler(ctx, data: io.BytesIO = None):
 
         # While loop - Grab a message from the channel (maybe wrap this in a loop until Q is drained)
         totalprocessed = 0
-        #message_bodies = ""
+        messages = []
+
         for i in range(cfg_MESSAGES_TO_READ):
             # Read a single message
             method_frame, header_frame, body = channel.basic_get(cfg_RABBITMQ_QNAME)
             if method_frame:
-                print(method_frame, header_frame, body)
+                data = json.loads(body)
+                messages.append(data)
                 channel.basic_ack(method_frame.delivery_tag)
-                print("Message ID: {}".format(header_frame.message_id),flush=True)
                 resp += "|4-MessageRead {}".format(header_frame.message_id)
-                jsonresponse[header_frame.message_id]=str(body)
-                #message_bodies += str(body)
                 totalprocessed += 1
-
             else:
                 break
         # Completed loop
         resp += "|5-MessageCount {}".format(totalprocessed)
+        jsonresponse["Messages"] = messages
 
         #Add in original request and Control Data
         jsonresponse["ReturnCodes"] = resp
@@ -90,13 +84,13 @@ def handler(ctx, data: io.BytesIO = None):
 
         return response.Response(
             ctx,
-            response_data=jsonresponse,
+            response_data=json.dumps(jsonresponse),
             headers={"Content-Type": "application/json"}
         )
     except Exception as ex:
         return response.Response(
             ctx,
-            response_data='{"error"}',
+            response_data=json.dumps({"error":"{}".format(ex)}),
             headers={"Content-Type": "application/json"}
         )
 ################################## Support Functions ###############################################    
@@ -116,6 +110,18 @@ def get_text_secret(secret_ocid):
 # RabbitMQ Access
 def connect_rabbitmq(hostname,port,username,password,exchange,qname):
 
+    try:
+        credentials = pika.PlainCredentials(username,password)
+        connection = pika.BlockingConnection(pika.ConnectionParameters(hostname,port,exchange,credentials))
+        print(connection)
+        channel = connection.channel()
+        channel.queue_declare(queue=qname)
+        return channel
+    except Exception as ex:
+        print("Error: RabbitMQ connection failed", ex, flush=True)
+        raise
+
+def publish_OIC(messsge):
     try:
         credentials = pika.PlainCredentials(username,password)
         connection = pika.BlockingConnection(pika.ConnectionParameters(hostname,port,exchange,credentials))

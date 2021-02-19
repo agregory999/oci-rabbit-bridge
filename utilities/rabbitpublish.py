@@ -3,8 +3,9 @@
 import pika
 import uuid
 import os
+import json
 
-from datetime import date
+from datetime import date, datetime
 
 def connect_rabbitmq(hostname,port,username,password,exchange,qname):
 
@@ -31,7 +32,7 @@ print ("Startup")
 channel = connect_rabbitmq(cfg_RABBITMQ_HOST,cfg_RABBITMQ_PORT,cfg_RABBITMQ_USERNAME,cfg_RABBITMQ_PASSWORD,cfg_RABBITMQ_EXCH,cfg_RABBITMQ_QNAME)
 print("Connected to RabbitMQ Channel {}".format(channel), flush=True)
 
-messagebody = '{"text":"rabbit message"}'
+messagebody = json.dumps({"text":"rabbit message {}".format(datetime.now(),flush=True)})
 props=pika.BasicProperties(message_id=str(uuid.uuid4()),content_type='application/json')
 # Publish message
 channel.basic_publish(exchange='',
