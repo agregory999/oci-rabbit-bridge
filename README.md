@@ -1,6 +1,6 @@
 # OCI RabbitMQ Bridge
 
-The purpose of this example is to show that an Oracle Function can consum e messages from an external RabbitMQ environment and provide them to a caller.  In this case, the Function is exposed via Oracle API Gateway and a public endpoint, protected by OAtuh.  The caller ultimately is an Oracle Integration Cloud environment, where the message contents are required to process be brought in and transformed before going to their final destination.
+The purpose of this example is to show that an Oracle Function can consum e messages from an external RabbitMQ environment and provide them to a caller in the form of valid JSON.  The messages are included in a sub-element of the final JSON, but it would be just as simple to return the message from RabbitMQ on its own.  In this case, the Function is exposed via Oracle API Gateway and a public endpoint, protected by OAtuh.  The caller ultimately is an Oracle Integration Cloud environment, where the message contents are required to process be brought in and transformed before going to their final destination.
 
 Rather than running something that constantly needs attention to consume messages from RMQ, the function takes a parameter named "messages", which determines the number of messages to pull from the Queue and return.  
 
@@ -102,11 +102,44 @@ In order for the function to operate, the following configs must be set.  Note t
 ![Function Config](images/Function-Config.png)
 
 ### Invoke the function
-Invoking the function from the command line requires a JSON message to be sent in, containing the "messages" element, a count of messages to pop from the RabbitMQ Queue:
+Invoking the function from the command line requires a JSON message to be sent in, containing the "messages" element, a count of messages to pop from the RabbitMQ Queue.  Here is an example of calling the function with an empty Q, then populating it with messages using the utility, finally pulling multiple messages.
 ```bash
-prompt> echo '{"messages":3}'|fn invoke rabbit-bridge oci-rabbit-bridge
-{'ReturnCodes': '0-Begin0-MessagesToRead:3|1-RMQConnect rabbitprod-integration.ociblue.agregory.page 5672|5-MessageCount 0', 'OriginalRequest': {'messages': 3}}
+prompt> echo '{"messages":10}'|fn invoke rabbit-bridge oci-rabbit-bridge |python -m json.tool
+{
+    "Messages": [],
+    "OriginalRequest": {
+        "messages": 10
+    },
+    "ReturnCodes": "0-Begin0-MessagesToRead:10|1-RMQConnect rabbitprod-integration.ociblue.agregory.page 5672|5-MessageCount 0"
+}
 
+prompt> ./utilities/rabbitpublish.py
+Startup
+<BlockingConnection impl=<SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x1065b56d0> params=<ConnectionParameters host=rabbitprod-integration.ociblue.agregory.page port=5672 virtual_host=/ ssl=False>>>
+Connected to RabbitMQ Channel <BlockingChannel impl=<Channel number=1 OPEN conn=<SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x1065b56d0> params=<ConnectionParameters host=rabbitprod-integration.ociblue.agregory.page port=5672 virtual_host=/ ssl=False>>>>
+ [x] Sent {"text": "rabbit message 2021-02-19 07:42:03.769061"}
+
+prompt> ./utilities/rabbitpublish.py
+Startup
+<BlockingConnection impl=<SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x1108da6d0> params=<ConnectionParameters host=rabbitprod-integration.ociblue.agregory.page port=5672 virtual_host=/ ssl=False>>>
+Connected to RabbitMQ Channel <BlockingChannel impl=<Channel number=1 OPEN conn=<SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x1108da6d0> params=<ConnectionParameters host=rabbitprod-integration.ociblue.agregory.page port=5672 virtual_host=/ ssl=False>>>>
+ [x] Sent {"text": "rabbit message 2021-02-19 07:42:05.759160"}
+
+prompt> echo '{"messages":10}'|fn invoke rabbit-bridge oci-rabbit-bridge |python -m json.tool
+{
+    "Messages": [
+        {
+            "text": "rabbit message 2021-02-19 07:42:03.769061"
+        },
+        {
+            "text": "rabbit message 2021-02-19 07:42:05.759160"
+        }
+    ],
+    "OriginalRequest": {
+        "messages": 10
+    },
+    "ReturnCodes": "0-Begin0-MessagesToRead:10|1-RMQConnect rabbitprod-integration.ociblue.agregory.page 5672|4-MessageRead db3ecdce-0c7b-429d-b6a3-17500bc27867|4-MessageRead 554f71cf-8127-41a5-93bb-d9d621144630|5-MessageCount 2"
+}
 ````
 ### Add API Gateway 
 Once the function is running, add the API Gateway or use an existing deployment.  This must also be configured per docs to allow access to Oracle Functions.  Once completed, add a deployment and then route as follows:
@@ -126,8 +159,8 @@ Connected to RabbitMQ Channel <BlockingChannel impl=<Channel number=1 OPEN conn=
  [x] Sent {"text":"rabbit message"}
 
 # Message to pull
-prompt> curl -k -X GET https://oxd3evz4z3r2vxvargpmwvc57e.apigateway.us-ashburn-1.oci.customer-oci.com/bridgev1/process -d '{"messages":3}'
-{'fca11341-0406-4bf7-bf12-dfa9ef949ced': 'b\'{"text":"rabbit message"}\'', 'ReturnCodes': '0-Begin0-MessagesToRead:3|1-RMQConnect rabbitprod-integration.ociblue.agregory.page 5672|4-MessageRead fca11341-0406-4bf7-bf12-dfa9ef949ced|5-MessageCount 1', 'OriginalRequest': {'messages': 3}}%
+prompt> curl -X GET https://oxd3evz4z3r2vxvargpmwvc57e.apigateway.us-ashburn-1.oci.customer-oci.com/rabbitbridge/invoke -d '{"messages":1}'
+{"Messages": [{"text": "rabbit message 2021-02-19 08:15:46.990803"}], "ReturnCodes": "0-Begin0-MessagesToRead:1|1-RMQConnect rabbitprod-integration.ociblue.agregory.page 5672|4-MessageRead 8410ea36-5304-4b1c-bfeb-8f45e6b83278|5-MessageCount 1", "OriginalRequest": {"messages": 1}}
 
 ```
 
