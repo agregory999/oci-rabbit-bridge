@@ -1,6 +1,6 @@
 # OCI RabbitMQ Bridge
 
-The purpose of this example is to show that an Oracle Function can consum e messages from an external RabbitMQ environment and provide them to a caller in the form of valid JSON.  The messages are included in a sub-element of the final JSON, but it would be just as simple to return the message from RabbitMQ on its own.  In this case, the Function is exposed via Oracle API Gateway and a public endpoint, protected by OAuth.  The caller ultimately is an Oracle Integration Cloud environment, where the message contents are required to process be brought in and transformed before going to their final destination.
+The purpose of this example is to show that an Oracle Function can consume messages from an external RabbitMQ environment and provide them to a caller in the form of valid JSON.  The messages are included in a sub-element of the final JSON, but it would be just as simple to return the message from RabbitMQ on its own.  In this case, the Function is exposed via Oracle API Gateway and a public endpoint, protected by OAuth.  The caller ultimately is an Oracle Integration Cloud environment, where the message contents are required to process be brought in and transformed before going to their final destination.
 
 Rather than running something that constantly needs attention to consume messages from RMQ, the function takes a parameter named "messages", which determines the number of messages to pull from the Queue and return.  
 
